@@ -11,7 +11,7 @@ jobs:
   Deploy-Preview:
     runs-on: ubuntu-latest
     outputs:
-      vercel-url: ${{ steps.deploy.outputs.vercel-url }}
+      vercel-url: ${{ steps.deploy.outputs.url }}
 
     steps:
       - uses: actions/checkout@v4
@@ -30,5 +30,4 @@ jobs:
       - name: Comment on PR
         uses: actions/github-script@v7
         with:
-          script: return "Deployment successful. URL: ${{ steps.deploy.outputs.vercel-url }}"
-          result-encoding: string
+          script: return "Hello world"
