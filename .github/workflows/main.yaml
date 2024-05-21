@@ -12,8 +12,6 @@ jobs:
     permissions:
       pull-requests: write
     runs-on: ubuntu-latest
-    outputs:
-      vercel-url: ${{ steps.deploy.outputs.url }}
 
     steps:
       - uses: actions/checkout@v4
