@@ -10,8 +10,8 @@ on:
 jobs:
   Deploy-Preview:
     runs-on: ubuntu-latest
-    # outputs:
-    #   vercel-url: ${{ steps.deploy.outputs.url }}
+    outputs:
+      vercel-url: ${{ steps.deploy.outputs.url }}
 
     steps:
       - uses: actions/checkout@v4
