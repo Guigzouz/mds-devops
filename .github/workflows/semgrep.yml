@@ -50,9 +50,26 @@ jobs:
         with:
           github-token: ${{github.token}}
           script: |
-            github.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: "PR Failed, checkout semgrep_output.json for more"
-            })
+            const fs = require('fs');
+            const issue_number = context.payload.pull_request ? context.payload.pull_request.number : context.issue.number;
+            const sarifFilePath = 'semgrep_output.json';
+            let sarifContent = '';
+
+            if (fs.existsSync(sarifFilePath)) {
+              sarifContent = fs.readFileSync(sarifFilePath, 'utf8');
+            } else {
+              sarifContent = 'Failed to read Semgrep output.';
+            }
+
+            const body = `PR Failed. Checkout the Semgrep output:\n\`\`\`json\n${sarifContent}\n\`\`\``;
+
+            if (issue_number) {
+              github.issues.createComment({
+                issue_number: issue_number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: body,
+              });
+            } else {
+              console.log("No issue or pull request context found.");
+            }
