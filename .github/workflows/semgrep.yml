@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - main
-      - master
     paths:
       - .github/workflows/semgrep.yml
   schedule:
@@ -41,8 +40,22 @@ jobs:
           name: semgrep_output
           path: semgrep_output.json
 
-      - name: Annotate PR with Semgrep results
+      - name: Annotate error comment on PR
         if: failure()
-        uses: github/codeql-action/upload-sarif@v2
+
+        uses: actions/github-script@v3
         with:
-          sarif_file: semgrep_output.json
+          github-token: ${{secrets.GITHUB_TOKEN}}
+          script: |
+            github.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: "PR Failed, checkout semgrep_output.json for more"
+            })
+
+      # - name: Annotate PR with Semgrep results
+      #   if: failure()
+      #   uses: github/codeql-action/upload-sarif@v2
+      #   with:
+      #     sarif_file: semgrep_output.json
