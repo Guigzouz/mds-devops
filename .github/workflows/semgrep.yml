@@ -42,17 +42,21 @@ jobs:
 
       - name: Annotate error comment on PR
         if: failure()
-
         uses: actions/github-script@v3
         with:
           github-token: ${{secrets.GITHUB_TOKEN}}
           script: |
-            github.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: "PR Failed, checkout semgrep_output.json for more"
-            })
+            const issue_number = context.payload.pull_request ? context.payload.pull_request.number : context.issue.number;
+            if (issue_number) {
+              github.issues.createComment({
+                issue_number: issue_number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: "PR Failed, checkout semgrep_output.json for more"
+              });
+            } else {
+              console.log("No issue or pull request context found.");
+            }
 
       # - name: Annotate PR with Semgrep results
       #   if: failure()
