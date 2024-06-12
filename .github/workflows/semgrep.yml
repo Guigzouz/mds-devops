@@ -13,6 +13,8 @@ name: Semgrep
 
 jobs:
   semgrep:
+    permissions:
+      pull-requests: write
     name: semgrep/ci
     runs-on: ubuntu-20.04
     env:
