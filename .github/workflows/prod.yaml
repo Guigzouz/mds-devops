@@ -9,7 +9,7 @@ on:
 jobs:
   Deploy-Production:
     permissions:
-      pull-requests: write
+      push: write
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
