@@ -32,7 +32,7 @@ jobs:
       - name: Run CI
         id: semgrep
         run: |
-          semgrep ci --config auto --no-suppress-errors --json > semgrep_output.json
+          semgrep ci --no-suppress-errors --json > semgrep_output.json
 
       - name: Upload Semgrep results
         if: failure()
