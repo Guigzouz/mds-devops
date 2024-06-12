@@ -3,14 +3,16 @@ on:
   pull_request: {}
   push:
     branches:
-    - main
-    - master
+      - main
+      - master
     paths:
-    - .github/workflows/semgrep.yml
+      - .github/workflows/semgrep.yml
   schedule:
-  # random HH:MM to avoid a load spike on GitHub Actions at 00:00
-  - cron: 17 18 * * *
+    # random HH:MM to avoid a load spike on GitHub Actions at 00:00
+    - cron: "17 18 * * *"
+
 name: Semgrep
+
 jobs:
   semgrep:
     name: semgrep/ci
@@ -20,5 +22,23 @@ jobs:
     container:
       image: returntocorp/semgrep
     steps:
-    - uses: actions/checkout@v3
-    - run: semgrep ci
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Run Semgrep
+        id: semgrep
+        run: |
+          semgrep ci --json > semgrep_output.json
+
+      - name: Upload Semgrep results
+        if: failure()
+        uses: actions/upload-artifact@v3
+        with:
+          name: semgrep_output
+          path: semgrep_output.json
+
+      - name: Annotate PR with Semgrep results
+        if: failure()
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: semgrep_output.json
