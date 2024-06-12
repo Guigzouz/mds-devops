@@ -8,7 +8,6 @@ on:
     paths:
       - .github/workflows/semgrep.yml
   schedule:
-    # random HH:MM to avoid a load spike on GitHub Actions at 00:00
     - cron: "17 18 * * *"
 
 name: Semgrep
@@ -28,7 +27,7 @@ jobs:
       - name: Run Semgrep
         id: semgrep
         run: |
-          semgrep ci --json > semgrep_output.json
+          semgrep ci --config auto --json > semgrep_output.json
 
       - name: Upload Semgrep results
         if: failure()
