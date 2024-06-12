@@ -9,7 +9,10 @@ on:
 
 jobs:
   Deploy-Preview:
+    permissions:
+      pull-requests: write
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v4
       - name: Install Vercel CLI
@@ -19,4 +22,16 @@ jobs:
       - name: Build Project Artifacts
         run: vercel build --token=${{ secrets.VERCEL_TOKEN }}
       - name: Deploy Project Artifacts to Vercel
-        run: vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }}
+        id: deploy
+        run: echo "url=$(vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }})" >> $GITHUB_OUTPUT
+      - name: Comment on PR
+        uses: actions/github-script@v3
+        with:
+          github-token: ${{secrets.GITHUB_TOKEN}}
+          script: |
+            github.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: "Hey! here is your preview url : ${{ steps.deploy.outputs.url }}"
+            })
