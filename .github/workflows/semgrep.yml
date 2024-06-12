@@ -4,31 +4,36 @@ on:
   push:
     branches:
       - main
-      - master
     paths:
       - .github/workflows/semgrep.yml
   schedule:
-    # random HH:MM to avoid a load spike on GitHub Actions at 00:00
     - cron: "17 18 * * *"
 
 name: Semgrep
 
 jobs:
   semgrep:
+    permissions:
+      pull-requests: write
     name: semgrep/ci
     runs-on: ubuntu-20.04
     env:
       SEMGREP_APP_TOKEN: ${{ secrets.SEMGREP_APP_TOKEN }}
     container:
-      image: returntocorp/semgrep
+      image: semgrep/semgrep
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Run Semgrep
+      - name: Run login
+        id: semgrep-login
+        run: |
+          semgrep login
+
+      - name: Run CI
         id: semgrep
         run: |
-          semgrep ci --json > semgrep_output.json
+          semgrep ci --no-suppress-errors --json > semgrep_output.json
 
       - name: Upload Semgrep results
         if: failure()
@@ -37,8 +42,34 @@ jobs:
           name: semgrep_output
           path: semgrep_output.json
 
-      - name: Annotate PR with Semgrep results
+      - name: Annotate error comment on PR
         if: failure()
-        uses: github/codeql-action/upload-sarif@v2
+
+        uses: actions/github-script@v3
+
         with:
-          sarif_file: semgrep_output.json
+          github-token: ${{github.token}}
+          script: |
+            const fs = require('fs');
+            const issue_number = context.payload.pull_request ? context.payload.pull_request.number : context.issue.number;
+            const sarifFilePath = 'semgrep_output.json';
+            let sarifContent = '';
+
+            if (fs.existsSync(sarifFilePath)) {
+              sarifContent = fs.readFileSync(sarifFilePath, 'utf8');
+            } else {
+              sarifContent = 'Failed to read Semgrep output.';
+            }
+
+            const body = `PR Failed. Checkout the Semgrep output:\n\`\`\`json\n${sarifContent}\n\`\`\``;
+
+            if (issue_number) {
+              github.issues.createComment({
+                issue_number: issue_number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: body,
+              });
+            } else {
+              console.log("No issue or pull request context found.");
+            }
